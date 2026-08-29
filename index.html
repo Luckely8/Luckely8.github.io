@@ -3,118 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CodeRunner Web - Pro IDE</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <title>CodeRunner Web - Replit Style IDE</title>
     <style>
-        body {
-            font-family: monospace;
-            background-color: #121212;
-            color: white;
-            padding: 20px;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .btn-row {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-        }
-        .code-area {
-            width: 100%;
-            height: 300px;
-            background: #1E1E1E;
-            color: white;
-            border: none;
-            padding: 10px;
-            font-size: 16px;
-            border-radius: 5px;
-            resize: vertical;
-        }
-        .code-area:focus {
-            outline: none;
-            border: 1px solid #4CAF50;
-        }
-        button {
-            padding: 10px 20px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-            font-family: monospace;
-        }
-        button:hover {
-            background: #45a049;
-        }
-        #output {
-            background: #1E1E1E;
-            padding: 10px;
-            margin-top: 10px;
-            min-height: 100px;
-            color: lime;
-            border-radius: 5px;
-            font-family: monospace;
-        }
-        #aiOutput {
-            background: #1E1E1E;
-            padding: 10px;
-            margin-top: 10px;
-            min-height: 100px;
-            color: cyan;
-            border-radius: 5px;
-            font-family: monospace;
-        }
-        .btn-row button {
-            margin-right: 5px;
-        }
+        body { font-family: monospace; background-color: #121212; color: white; padding: 20px; }
+        .container { display: flex; gap: 20px; }
+        .sidebar { width: 250px; background: #1E1E1E; padding: 15px; border-radius: 5px; }
+        .main-area { flex: 1; }
+        .btn-row { display: flex; gap: 8px; margin-top: 10px; }
+        .code-area { width: 100%; height: 300px; background: #1E1E1E; color: white; border: none; padding: 10px; font-size: 16px; border-radius: 5px; resize: vertical; }
+        button { padding: 10px 20px; background: green; color: white; border: none; cursor: pointer; border-radius: 5px; font-family: monospace; }
+        button:hover { background: darkgreen; }
+        #output { background: #1E1E1E; padding: 10px; margin-top: 10px; min-height: 100px; color: lime; border-radius: 5px; }
+        #aiOutput { background: #1E1E1E; padding: 10px; margin-top: 10px; min-height: 100px; color: cyan; border-radius: 5px; }
+        .sidebar h3 { color: #4CAF50; }
+        .sidebar ul { list-style: none; padding: 0; }
+        .sidebar li { padding: 5px 0; cursor: pointer; }
+        .sidebar li:hover { color: #4CAF50; }
+        .sidebar input { width: 90%; padding: 5px; background: #121212; color: white; border: 1px solid #4CAF50; margin-bottom: 10px; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h2>⚡ CodeRunner Web Pro</h2>
+    <h2>⚡ CodeRunner Web Replit</h2>
+    
+    <div class="container">
+        <!-- File Explorer -->
+        <div class="sidebar">
+            <h3>📂 Projects</h3>
+            <input type="text" id="fileName" placeholder="Enter filename...">
+            <button onclick="createFile()">New File</button>
+            <ul id="fileList"></ul>
+        </div>
+        
+        <!-- Main Code Area -->
+        <div class="main-area">
+            <textarea id="code" class="code-area" spellcheck="false">print("Hello World")</textarea>
+            
+            <div class="btn-row">
+                <button onclick="runCode(71)">Run Python</button>
+                <button onclick="runCode(63)">Run JavaScript</button>
+                <button onclick="runCode(54)">Run C++</button>
+                <button onclick="runCode(62)">Run Java</button>
+                <button onclick="saveCode()">Save Current File</button>
+                <button onclick="askAI()">AI Help</button>
+            </div>
+            
+            <div id="output">Output will appear here...</div>
+            <div id="aiOutput">AI Help will appear here...</div>
+        </div>
     </div>
-
-    <textarea id="code" class="code-area" spellcheck="false" oninput="highlightCode()">print("Hello World")</textarea>
-
-    <div class="btn-row">
-        <button onclick="runCode(71)">Run Python</button>
-        <button onclick="runCode(63)">Run JavaScript</button>
-        <button onclick="runCode(54)">Run C++</button>
-        <button onclick="saveCode()">Save Code</button>
-        <button onclick="loadCode()">Load Code</button>
-        <button onclick="askAI()">AI Help</button>
-    </div>
-
-    <div id="output">Output will appear here...</div>
-    <div id="aiOutput">AI Help will appear here...</div>
-
-    <!-- Syntax Highlighting Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
 
     <script>
-        function highlightCode() {
-            // Basic syntax highlighting for viewing (real highlighting will require more work)
-            // We'll just ensure the textarea scrolls properly
+        let currentFile = "main.py";
+
+        // Create a new file in the explorer
+        function createFile() {
+            const fileName = document.getElementById('fileName').value;
+            if (fileName) {
+                const fileList = document.getElementById('fileList');
+                const li = document.createElement('li');
+                li.textContent = fileName;
+                li.onclick = () => loadFile(fileName);
+                fileList.appendChild(li);
+                document.getElementById('fileName').value = "";
+            }
         }
 
+        // Save the current code to local storage
         function saveCode() {
             const code = document.getElementById('code').value;
-            localStorage.setItem('savedCode', code);
+            localStorage.setItem('currentCode', code);
             document.getElementById('output').innerHTML = "Code Saved!";
         }
 
-        function loadCode() {
-            const saved = localStorage.getItem('savedCode');
-            if (saved) {
-                document.getElementById('code').value = saved;
-                document.getElementById('output').innerHTML = "Code Loaded!";
-            } else {
-                document.getElementById('output').innerHTML = "No saved code found!";
-            }
+        // Load code from local storage
+        function loadFile(fileName) {
+            document.getElementById('code').value = localStorage.getItem('currentCode') || "";
+            document.getElementById('output').innerHTML = "Loaded " + fileName;
+            currentFile = fileName;
         }
 
         function runCode(languageId) {
@@ -122,7 +87,6 @@
             const outputDiv = document.getElementById('output');
             outputDiv.innerHTML = "Running...";
 
-            // Send code to Judge0 API (Cloud Execution)
             fetch('https://ce.judge0.com/submissions/?base64_encoded=false&wait=true', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -146,7 +110,6 @@
             const aiOutputDiv = document.getElementById('aiOutput');
             aiOutputDiv.innerHTML = "AI is thinking...";
 
-            // Ask which provider to use
             const provider = prompt(
                 "Choose AI Provider:\n" +
                 "1. DeepSeek\n" +
