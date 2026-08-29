@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CodeRunner Web - Replit Style IDE</title>
+    <title>CodeRunner Web - Professional IDE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <style>
         body { font-family: monospace; background-color: #121212; color: white; padding: 20px; }
         .container { display: flex; gap: 20px; }
@@ -23,10 +24,9 @@
     </style>
 </head>
 <body>
-    <h2>⚡ CodeRunner Web Replit</h2>
+    <h2>⚡ CodeRunner Web</h2>
     
     <div class="container">
-        <!-- File Explorer -->
         <div class="sidebar">
             <h3>📂 Projects</h3>
             <input type="text" id="fileName" placeholder="Enter filename...">
@@ -34,7 +34,6 @@
             <ul id="fileList"></ul>
         </div>
         
-        <!-- Main Code Area -->
         <div class="main-area">
             <textarea id="code" class="code-area" spellcheck="false">print("Hello World")</textarea>
             
@@ -45,6 +44,7 @@
                 <button onclick="runCode(62)">Run Java</button>
                 <button onclick="saveCode()">Save Current File</button>
                 <button onclick="askAI()">AI Help</button>
+                <button onclick="shareCode()">Share Code</button>
             </div>
             
             <div id="output">Output will appear here...</div>
@@ -52,10 +52,12 @@
         </div>
     </div>
 
+    <!-- Syntax Highlighting Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+
     <script>
         let currentFile = "main.py";
 
-        // Create a new file in the explorer
         function createFile() {
             const fileName = document.getElementById('fileName').value;
             if (fileName) {
@@ -68,18 +70,29 @@
             }
         }
 
-        // Save the current code to local storage
         function saveCode() {
             const code = document.getElementById('code').value;
             localStorage.setItem('currentCode', code);
             document.getElementById('output').innerHTML = "Code Saved!";
         }
 
-        // Load code from local storage
         function loadFile(fileName) {
             document.getElementById('code').value = localStorage.getItem('currentCode') || "";
             document.getElementById('output').innerHTML = "Loaded " + fileName;
             currentFile = fileName;
+        }
+
+        function shareCode() {
+            const code = document.getElementById('code').value;
+            const encodedCode = btoa(code);
+            const shareUrl = window.location.origin + window.location.pathname + "#code=" + encodedCode;
+            const copyText = "Check out this code: " + shareUrl;
+            
+            navigator.clipboard.writeText(copyText).then(() => {
+                document.getElementById('output').innerHTML = "Code link copied to clipboard!";
+            }).catch(err => {
+                document.getElementById('output').innerHTML = "Error copying: " + err;
+            });
         }
 
         function runCode(languageId) {
