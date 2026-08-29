@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CodeRunner Web - Cloud IDE</title>
+    <title>CodeRunner Web - App Generator</title>
     <style>
         body { font-family: monospace; background-color: #121212; color: white; padding: 20px; }
         .container { display: flex; gap: 20px; }
@@ -23,7 +23,7 @@
     </style>
 </head>
 <body>
-    <h2>⚡ CodeRunner Web</h2>
+    <h2>⚡ CodeRunner Agent</h2>
     
     <div class="container">
         <div class="sidebar">
@@ -34,22 +34,19 @@
         </div>
         
         <div class="main-area">
-            <textarea id="code" placeholder="print('Hello World')" spellcheck="false"></textarea>
+            <textarea id="code" placeholder="Type your prompt here... (e.g., Build me a To-Do List App)"></textarea>
             
             <div class="btn-row">
                 <button onclick="runCode(71)">Run Python</button>
                 <button onclick="runCode(63)">Run JavaScript</button>
                 <button onclick="runCode(54)">Run C++</button>
                 <button onclick="runCode(62)">Run Java</button>
-                <button onclick="saveCode()">Save Current File</button>
                 <button onclick="downloadFile()">Download File</button>
-                <button onclick="loadFile()">Load File</button>
-                <button onclick="askAI()">AI Help</button>
-                <button onclick="shareCode()">Share Code</button>
+                <button onclick="buildApp()">Build App</button>
             </div>
             
             <div id="output">Output will appear here...</div>
-            <div id="aiOutput">AI Help will appear here...</div>
+            <div id="aiOutput">Generated App Code will appear here...</div>
         </div>
     </div>
 
@@ -72,10 +69,10 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        let currentFile = "main"; // Default without dot
+        let currentFile = "main";
 
         function sanitizePath(path) {
-            return path.replace(/[.#$\[\]]/g, '_'); // Replaces dots and invalid chars with underscore
+            return path.replace(/[.#$\[\]]/g, '_');
         }
 
         function createFile() {
@@ -115,21 +112,6 @@
             });
         }
 
-        // ✅ NEW: Download the code as a file!
-        function downloadFile() {
-            const code = document.getElementById('code').value;
-            const blob = new Blob([code], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = currentFile || "code.txt";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            document.getElementById('output').innerHTML = "File Downloaded!";
-        }
-
         function runCode(languageId) {
             const code = document.getElementById('code').value;
             const outputDiv = document.getElementById('output');
@@ -153,86 +135,91 @@
             });
         }
 
-        function askAI() {
-            const code = document.getElementById('code').value;
+        // ✅ NEW: Build a Web App using Gemini!
+        function buildApp() {
+            const prompt = document.getElementById('code').value;
             const aiOutputDiv = document.getElementById('aiOutput');
-            aiOutputDiv.innerHTML = "AI is thinking...";
+            aiOutputDiv.innerHTML = "Building your app...";
 
             const provider = prompt(
                 "Choose AI Provider:\n" +
-                "1. DeepSeek\n" +
-                "2. Groq\n" +
-                "3. Mistral\n" +
-                "4. OpenAI (ChatGPT)\n" +
-                "5. Gemini\n" +
-                "6. Custom"
+                "1. Gemini\n" +
+                "2. OpenAI (ChatGPT)"
             );
 
-            let baseUrl = "";
-            let model = "";
             let apiKey = "";
             let isGemini = false;
 
             if (provider === "1") {
-                baseUrl = "https://api.deepseek.com/v1";
-                model = "deepseek-v4-pro";
-            } else if (provider === "2") {
-                baseUrl = "https://api.groq.com/openai/v1";
-                model = "openai/gpt-oss-120b";
-            } else if (provider === "3") {
-                baseUrl = "https://api.mistral.ai/v1";
-                model = "mistral-medium-3.5";
-            } else if (provider === "4") {
-                baseUrl = "https://api.openai.com/v1";
-                model = "gpt-4o-mini";
-            } else if (provider === "5") {
                 isGemini = true;
-                model = "gemini-3.5-flash";
-            } else if (provider === "6") {
-                baseUrl = prompt("Enter the custom API Base URL (e.g., https://api.example.com/v1):");
-                model = prompt("Enter the model name:");
+                apiKey = prompt("Enter your Gemini API Key:");
+            } else if (provider === "2") {
+                isGemini = false;
+                apiKey = prompt("Enter your OpenAI API Key:");
             } else {
                 aiOutputDiv.innerHTML = "Invalid provider selected.";
                 return;
             }
 
-            apiKey = prompt("Enter your " + (provider === "5" ? "Gemini" : "API") + " Key:");
-
             if (isGemini) {
-                fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Explain this code: ${code}` }] }]
+                        contents: [{ parts: [{ text: `Write a complete single-file HTML, CSS, and JavaScript app for this request: ${prompt}. Return ONLY the code.` }] }]
                     })
                 })
                 .then(response => response.json())
                 .then(data => {
-                    aiOutputDiv.innerHTML = data.candidates[0].content.parts[0].text;
+                    const text = data.candidates[0].content.parts[0].text;
+                    const cleanCode = text.replace(/```html/g, "").replace(/```/g, "").trim();
+                    aiOutputDiv.innerHTML = cleanCode;
+                    // Allow user to download the generated code
+                    document.getElementById('code').value = cleanCode;
+                    document.getElementById('output').innerHTML = "App Generated! You can now Download it!";
                 })
                 .catch(error => {
                     aiOutputDiv.innerHTML = "Error: " + error;
                 });
             } else {
-                fetch(`${baseUrl}/chat/completions`, {
+                fetch(`https://api.openai.com/v1/chat/completions`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                         "Authorization": `Bearer ${apiKey}`
                     },
                     body: JSON.stringify({
-                        model: model,
-                        messages: [{ role: "user", content: `Explain this code: ${code}` }]
+                        model: "gpt-4o-mini",
+                        messages: [{ role: "user", content: `Write a complete single-file HTML, CSS, and JavaScript app for this request: ${prompt}. Return ONLY the code.` }]
                     })
                 })
                 .then(response => response.json())
                 .then(data => {
-                    aiOutputDiv.innerHTML = data.choices[0].message.content;
+                    const text = data.choices[0].message.content;
+                    const cleanCode = text.replace(/```html/g, "").replace(/```/g, "").trim();
+                    aiOutputDiv.innerHTML = cleanCode;
+                    document.getElementById('code').value = cleanCode;
+                    document.getElementById('output').innerHTML = "App Generated! You can now Download it!";
                 })
                 .catch(error => {
                     aiOutputDiv.innerHTML = "Error: " + error;
                 });
             }
+        }
+
+        // ✅ NEW: Download the generated app
+        function downloadFile() {
+            const code = document.getElementById('code').value;
+            const blob = new Blob([code], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "myapp.html";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            document.getElementById('output').innerHTML = "App Downloaded!";
         }
     </script>
 </body>
