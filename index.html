@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CodeRunner Web - App Generator</title>
+    <title>CodeRunner Agent - App Generator</title>
     <style>
         body { font-family: monospace; background-color: #121212; color: white; padding: 20px; }
         .container { display: flex; gap: 20px; }
-        .sidebar { width: 250px; background: #1E1E1E; padding: 15px; border-radius: 5px; }
         .main-area { flex: 1; }
         .btn-row { display: flex; gap: 8px; margin-top: 10px; }
         textarea { width: 100%; height: 300px; background: #1E1E1E; color: #00FF00; border: none; padding: 10px; font-size: 16px; border-radius: 5px; resize: vertical; }
@@ -15,137 +14,33 @@
         button:hover { background: darkgreen; }
         #output { background: #1E1E1E; padding: 10px; margin-top: 10px; min-height: 100px; color: lime; border-radius: 5px; }
         #aiOutput { background: #1E1E1E; padding: 10px; margin-top: 10px; min-height: 100px; color: cyan; border-radius: 5px; }
-        .sidebar h3 { color: #4CAF50; }
-        .sidebar ul { list-style: none; padding: 0; }
-        .sidebar li { padding: 5px 0; cursor: pointer; }
-        .sidebar li:hover { color: #4CAF50; }
-        .sidebar input { width: 90%; padding: 5px; background: #121212; color: white; border: 1px solid #4CAF50; margin-bottom: 10px; }
     </style>
 </head>
 <body>
     <h2>⚡ CodeRunner Agent</h2>
     
-    <div class="container">
-        <div class="sidebar">
-            <h3>📂 Projects</h3>
-            <input type="text" id="fileName" placeholder="Enter filename...">
-            <button onclick="createFile()">New File</button>
-            <ul id="fileList"></ul>
+    <div class="main-area">
+        <textarea id="code" placeholder="Type your prompt here... (e.g., Build me a To-Do List App)"></textarea>
+        
+        <div class="btn-row">
+            <button onclick="buildApp()">Build App</button>
+            <button onclick="downloadFile()">Download File</button>
         </div>
         
-        <div class="main-area">
-            <textarea id="code" placeholder="Type your prompt here... (e.g., Build me a To-Do List App)"></textarea>
-            
-            <div class="btn-row">
-                <button onclick="runCode(71)">Run Python</button>
-                <button onclick="runCode(63)">Run JavaScript</button>
-                <button onclick="runCode(54)">Run C++</button>
-                <button onclick="runCode(62)">Run Java</button>
-                <button onclick="downloadFile()">Download File</button>
-                <button onclick="buildApp()">Build App</button>
-            </div>
-            
-            <div id="output">Output will appear here...</div>
-            <div id="aiOutput">Generated App Code will appear here...</div>
-        </div>
+        <div id="output">Output will appear here...</div>
+        <div id="aiOutput">Generated App Code will appear here...</div>
     </div>
 
-    <!-- Firebase Libraries -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
     <script>
-        // 🔥 PASTE YOUR FIREBASE CONFIG HERE!
-        const firebaseConfig = {
-            apiKey: "AIzaSyD_7AIg7YruiiAyEeBNUikT9rbARjuVWFo",
-            authDomain: "yourchatapp-6ea16.firebaseapp.com",
-            databaseURL: "https://yourchatapp-6ea16-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "yourchatapp-6ea16",
-            storageBucket: "yourchatapp-6ea16.firebasestorage.app",
-            messagingSenderId: "671935031083",
-            appId: "1:671935031083:web:be70584022a9b1d302c76e",
-            measurementId: "G-NM55MMKCNK"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-
-        let currentFile = "main";
-
-        function sanitizePath(path) {
-            return path.replace(/[.#$\[\]]/g, '_');
-        }
-
-        function createFile() {
-            const fileName = document.getElementById('fileName').value;
-            if (fileName) {
-                const cleanName = sanitizePath(fileName);
-                const fileList = document.getElementById('fileList');
-                const li = document.createElement('li');
-                li.textContent = cleanName;
-                li.onclick = () => loadFile(cleanName);
-                fileList.appendChild(li);
-                document.getElementById('fileName').value = "";
-                currentFile = cleanName;
-            }
-        }
-
-        function saveCode() {
-            const code = document.getElementById('code').value;
-            const cleanName = sanitizePath(currentFile);
-            database.ref('projects/' + cleanName).set({
-                code: code
-            });
-            document.getElementById('output').innerHTML = "Saved to Cloud!";
-        }
-
-        function loadFile() {
-            const cleanName = sanitizePath(currentFile);
-            database.ref('projects/' + cleanName).once('value').then(snapshot => {
-                const data = snapshot.val();
-                if (data) {
-                    document.getElementById('code').value = data.code;
-                    document.getElementById('output').innerHTML = "Loaded " + cleanName + " from Cloud!";
-                } else {
-                    document.getElementById('code').value = "";
-                    document.getElementById('output').innerHTML = "No code found for " + cleanName;
-                }
-            });
-        }
-
-        function runCode(languageId) {
-            const code = document.getElementById('code').value;
-            const outputDiv = document.getElementById('output');
-            outputDiv.innerHTML = "Running...";
-
-            fetch('https://ce.judge0.com/submissions/?base64_encoded=false&wait=true', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    source_code: code,
-                    language_id: languageId
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                let result = data.stdout || data.stderr || data.compile_output || "No output";
-                outputDiv.innerHTML = result;
-            })
-            .catch(error => {
-                outputDiv.innerHTML = "Error: " + error;
-            });
-        }
-
-        // ✅ NEW: Build a Web App using Gemini!
+        // ✅ Simple, reliable version to test the popup
         function buildApp() {
             const prompt = document.getElementById('code').value;
             const aiOutputDiv = document.getElementById('aiOutput');
-            aiOutputDiv.innerHTML = "Building your app...";
-
-            const provider = prompt(
-                "Choose AI Provider:\n" +
-                "1. Gemini\n" +
-                "2. OpenAI (ChatGPT)"
-            );
+            
+            // 1. Ask for provider (This popup MUST open!)
+            const provider = prompt("Choose AI Provider:\n1. Gemini\n2. OpenAI (ChatGPT)");
+            
+            if (provider === null) return; // User clicked Cancel
 
             let apiKey = "";
             let isGemini = false;
@@ -161,6 +56,8 @@
                 return;
             }
 
+            aiOutputDiv.innerHTML = "Generating your app...";
+
             if (isGemini) {
                 fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
                     method: "POST",
@@ -174,12 +71,10 @@
                     const text = data.candidates[0].content.parts[0].text;
                     const cleanCode = text.replace(/```html/g, "").replace(/```/g, "").trim();
                     aiOutputDiv.innerHTML = cleanCode;
-                    // Allow user to download the generated code
                     document.getElementById('code').value = cleanCode;
-                    document.getElementById('output').innerHTML = "App Generated! You can now Download it!";
                 })
                 .catch(error => {
-                    aiOutputDiv.innerHTML = "Error: " + error;
+                    aiOutputDiv.innerHTML = "Gemini Error: " + error;
                 });
             } else {
                 fetch(`https://api.openai.com/v1/chat/completions`, {
@@ -199,15 +94,13 @@
                     const cleanCode = text.replace(/```html/g, "").replace(/```/g, "").trim();
                     aiOutputDiv.innerHTML = cleanCode;
                     document.getElementById('code').value = cleanCode;
-                    document.getElementById('output').innerHTML = "App Generated! You can now Download it!";
                 })
                 .catch(error => {
-                    aiOutputDiv.innerHTML = "Error: " + error;
+                    aiOutputDiv.innerHTML = "OpenAI Error: " + error;
                 });
             }
         }
 
-        // ✅ NEW: Download the generated app
         function downloadFile() {
             const code = document.getElementById('code').value;
             const blob = new Blob([code], { type: 'text/html' });
