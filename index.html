@@ -72,37 +72,45 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        let currentFile = "main.py";
+        let currentFile = "main"; // Default without dot
+
+        function sanitizePath(path) {
+            return path.replace(/[.#$\[\]]/g, '_'); // Replaces dots and invalid chars with underscore
+        }
 
         function createFile() {
             const fileName = document.getElementById('fileName').value;
             if (fileName) {
+                const cleanName = sanitizePath(fileName);
                 const fileList = document.getElementById('fileList');
                 const li = document.createElement('li');
-                li.textContent = fileName;
-                li.onclick = () => loadFile(fileName);
+                li.textContent = cleanName;
+                li.onclick = () => loadFile(cleanName);
                 fileList.appendChild(li);
                 document.getElementById('fileName').value = "";
+                currentFile = cleanName;
             }
         }
 
         function saveCode() {
             const code = document.getElementById('code').value;
-            database.ref('projects/' + currentFile).set({
+            const cleanName = sanitizePath(currentFile);
+            database.ref('projects/' + cleanName).set({
                 code: code
             });
             document.getElementById('output').innerHTML = "Saved to Cloud!";
         }
 
         function loadFile() {
-            database.ref('projects/' + currentFile).once('value').then(snapshot => {
+            const cleanName = sanitizePath(currentFile);
+            database.ref('projects/' + cleanName).once('value').then(snapshot => {
                 const data = snapshot.val();
                 if (data) {
                     document.getElementById('code').value = data.code;
-                    document.getElementById('output').innerHTML = "Loaded " + currentFile + " from Cloud!";
+                    document.getElementById('output').innerHTML = "Loaded " + cleanName + " from Cloud!";
                 } else {
                     document.getElementById('code').value = "";
-                    document.getElementById('output').innerHTML = "No code found for " + currentFile;
+                    document.getElementById('output').innerHTML = "No code found for " + cleanName;
                 }
             });
         }
