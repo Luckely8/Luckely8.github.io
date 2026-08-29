@@ -43,6 +43,7 @@
                 <button onclick="runCode(62)">Run Java</button>
                 <button onclick="saveCode()">Save Current File</button>
                 <button onclick="downloadFile()">Download File</button>
+                <button onclick="loadFile()">Load File</button>
                 <button onclick="askAI()">AI Help</button>
                 <button onclick="shareCode()">Share Code</button>
             </div>
@@ -91,16 +92,16 @@
             document.getElementById('output').innerHTML = "Saved to Cloud!";
         }
 
-        function loadFile(fileName) {
-            database.ref('projects/' + fileName).once('value').then(snapshot => {
+        function loadFile() {
+            database.ref('projects/' + currentFile).once('value').then(snapshot => {
                 const data = snapshot.val();
                 if (data) {
                     document.getElementById('code').value = data.code;
-                    document.getElementById('output').innerHTML = "Loaded " + fileName;
+                    document.getElementById('output').innerHTML = "Loaded " + currentFile + " from Cloud!";
                 } else {
                     document.getElementById('code').value = "";
+                    document.getElementById('output').innerHTML = "No code found for " + currentFile;
                 }
-                currentFile = fileName;
             });
         }
 
