@@ -10,21 +10,47 @@
         button { padding: 10px 20px; margin-top: 10px; background: green; color: white; border: none; cursor: pointer; }
         button:hover { background: darkgreen; }
         #output { background: #1E1E1E; padding: 10px; margin-top: 10px; min-height: 100px; color: lime; }
+        #aiOutput { background: #1E1E1E; padding: 10px; margin-top: 10px; min-height: 100px; color: cyan; }
+        .btn-row { margin-top: 10px; }
+        .btn-row button { margin-right: 5px; }
     </style>
 </head>
 <body>
     <h2>⚡ CodeRunner Web</h2>
-    <textarea id="code" placeholder="Type Python code here..." oninput="updateOutput()">print("Hello World")</textarea>
-    <br>
-    <button onclick="runCode()">Run Code</button>
+    
+    <textarea id="code" placeholder="Type code here...">print("Hello World")</textarea>
+    
+    <div class="btn-row">
+        <button onclick="runPython()">Run Python</button>
+        <button onclick="runJavaScript()">Run JavaScript</button>
+        <button onclick="saveCode()">Save Code</button>
+        <button onclick="loadCode()">Load Code</button>
+        <button onclick="askAI()">AI Help</button>
+    </div>
+
     <div id="output">Output will appear here...</div>
+    <div id="aiOutput">AI Help will appear here...</div>
 
     <script>
-        function updateOutput() {
-            // This is just a placeholder for now.
+        // Save code to browser's local storage
+        function saveCode() {
+            const code = document.getElementById('code').value;
+            localStorage.setItem('savedCode', code);
+            document.getElementById('output').innerHTML = "Code Saved!";
         }
 
-        function runCode() {
+        // Load code from browser's local storage
+        function loadCode() {
+            const saved = localStorage.getItem('savedCode');
+            if (saved) {
+                document.getElementById('code').value = saved;
+                document.getElementById('output').innerHTML = "Code Loaded!";
+            } else {
+                document.getElementById('output').innerHTML = "No saved code found!";
+            }
+        }
+
+        function runPython() {
             const code = document.getElementById('code').value;
             const outputDiv = document.getElementById('output');
             outputDiv.innerHTML = "Running...";
@@ -45,6 +71,62 @@
             })
             .catch(error => {
                 outputDiv.innerHTML = "Error: " + error;
+            });
+        }
+
+        function runJavaScript() {
+            const code = document.getElementById('code').value;
+            const outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = "Running...";
+
+            // Send code to Judge0 API (Cloud Execution - JavaScript/Node.js)
+            fetch('https://ce.judge0.com/submissions/?base64_encoded=false&wait=true', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    source_code: code,
+                    language_id: 63 // JavaScript (Node.js)
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                let result = data.stdout || data.stderr || data.compile_output || "No output";
+                outputDiv.innerHTML = result;
+            })
+            .catch(error => {
+                outputDiv.innerHTML = "Error: " + error;
+            });
+        }
+
+        function askAI() {
+            const code = document.getElementById('code').value;
+            const aiOutputDiv = document.getElementById('aiOutput');
+            aiOutputDiv.innerHTML = "AI is thinking...";
+
+            // Replace with your Gemini API key
+          const apiKey = "";
+
+            // Send code to Gemini API
+            fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{ text: `Explain this code: ${code}` }]
+                    }]
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.candidates && data.candidates.length > 0) {
+                    const text = data.candidates[0].content.parts[0].text;
+                    aiOutputDiv.innerHTML = text;
+                } else {
+                    aiOutputDiv.innerHTML = "AI Error: " + JSON.stringify(data);
+                }
+            })
+            .catch(error => {
+                aiOutputDiv.innerHTML = "AI Error: " + error;
             });
         }
     </script>
