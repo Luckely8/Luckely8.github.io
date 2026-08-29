@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CodeRunner Web - The Cloud IDE</title>
+    <title>CodeRunner Web - Pro IDE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <style>
         body {
             font-family: monospace;
@@ -11,7 +12,18 @@
             color: white;
             padding: 20px;
         }
-        textarea {
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .code-area {
             width: 100%;
             height: 300px;
             background: #1E1E1E;
@@ -22,18 +34,21 @@
             border-radius: 5px;
             resize: vertical;
         }
+        .code-area:focus {
+            outline: none;
+            border: 1px solid #4CAF50;
+        }
         button {
             padding: 10px 20px;
-            margin-top: 10px;
-            margin-right: 5px;
-            background: green;
+            background: #4CAF50;
             color: white;
             border: none;
             cursor: pointer;
             border-radius: 5px;
+            font-family: monospace;
         }
         button:hover {
-            background: darkgreen;
+            background: #45a049;
         }
         #output {
             background: #1E1E1E;
@@ -42,6 +57,7 @@
             min-height: 100px;
             color: lime;
             border-radius: 5px;
+            font-family: monospace;
         }
         #aiOutput {
             background: #1E1E1E;
@@ -50,20 +66,24 @@
             min-height: 100px;
             color: cyan;
             border-radius: 5px;
+            font-family: monospace;
         }
-        .btn-row {
-            margin-top: 10px;
+        .btn-row button {
+            margin-right: 5px;
         }
     </style>
 </head>
 <body>
-    <h2>⚡ CodeRunner Web</h2>
-    
-    <textarea id="code" placeholder="Type code here...">print("Hello World")</textarea>
-    
+    <div class="header">
+        <h2>⚡ CodeRunner Web Pro</h2>
+    </div>
+
+    <textarea id="code" class="code-area" spellcheck="false" oninput="highlightCode()">print("Hello World")</textarea>
+
     <div class="btn-row">
-        <button onclick="runPython()">Run Python</button>
-        <button onclick="runJavaScript()">Run JavaScript</button>
+        <button onclick="runCode(71)">Run Python</button>
+        <button onclick="runCode(63)">Run JavaScript</button>
+        <button onclick="runCode(54)">Run C++</button>
         <button onclick="saveCode()">Save Code</button>
         <button onclick="loadCode()">Load Code</button>
         <button onclick="askAI()">AI Help</button>
@@ -72,15 +92,21 @@
     <div id="output">Output will appear here...</div>
     <div id="aiOutput">AI Help will appear here...</div>
 
+    <!-- Syntax Highlighting Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+
     <script>
-        // Save code to browser's local storage
+        function highlightCode() {
+            // Basic syntax highlighting for viewing (real highlighting will require more work)
+            // We'll just ensure the textarea scrolls properly
+        }
+
         function saveCode() {
             const code = document.getElementById('code').value;
             localStorage.setItem('savedCode', code);
             document.getElementById('output').innerHTML = "Code Saved!";
         }
 
-        // Load code from browser's local storage
         function loadCode() {
             const saved = localStorage.getItem('savedCode');
             if (saved) {
@@ -91,18 +117,18 @@
             }
         }
 
-        function runPython() {
+        function runCode(languageId) {
             const code = document.getElementById('code').value;
             const outputDiv = document.getElementById('output');
             outputDiv.innerHTML = "Running...";
 
-            // Send code to Judge0 API (Cloud Execution - Python 3)
+            // Send code to Judge0 API (Cloud Execution)
             fetch('https://ce.judge0.com/submissions/?base64_encoded=false&wait=true', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     source_code: code,
-                    language_id: 71 // Python 3
+                    language_id: languageId
                 })
             })
             .then(response => response.json())
@@ -115,37 +141,12 @@
             });
         }
 
-        function runJavaScript() {
-            const code = document.getElementById('code').value;
-            const outputDiv = document.getElementById('output');
-            outputDiv.innerHTML = "Running...";
-
-            // Send code to Judge0 API (Cloud Execution - JavaScript/Node.js)
-            fetch('https://ce.judge0.com/submissions/?base64_encoded=false&wait=true', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    source_code: code,
-                    language_id: 63 // JavaScript (Node.js)
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                let result = data.stdout || data.stderr || data.compile_output || "No output";
-                outputDiv.innerHTML = result;
-            })
-            .catch(error => {
-                outputDiv.innerHTML = "Error: " + error;
-            });
-        }
-
-        // Universal AI Support (Gemini, OpenAI, DeepSeek, Groq, Mistral, Custom)
         function askAI() {
             const code = document.getElementById('code').value;
             const aiOutputDiv = document.getElementById('aiOutput');
             aiOutputDiv.innerHTML = "AI is thinking...";
 
-            // Step 1: Ask which provider to use
+            // Ask which provider to use
             const provider = prompt(
                 "Choose AI Provider:\n" +
                 "1. DeepSeek\n" +
@@ -161,23 +162,22 @@
             let apiKey = "";
             let isGemini = false;
 
-            // Step 2: Set up the URL and Model for each provider
-            if (provider === "1") { // DeepSeek
+            if (provider === "1") {
                 baseUrl = "https://api.deepseek.com/v1";
                 model = "deepseek-v4-pro";
-            } else if (provider === "2") { // Groq
+            } else if (provider === "2") {
                 baseUrl = "https://api.groq.com/openai/v1";
                 model = "openai/gpt-oss-120b";
-            } else if (provider === "3") { // Mistral
+            } else if (provider === "3") {
                 baseUrl = "https://api.mistral.ai/v1";
                 model = "mistral-medium-3.5";
-            } else if (provider === "4") { // OpenAI (ChatGPT)
+            } else if (provider === "4") {
                 baseUrl = "https://api.openai.com/v1";
                 model = "gpt-4o-mini";
-            } else if (provider === "5") { // Gemini
+            } else if (provider === "5") {
                 isGemini = true;
                 model = "gemini-3.5-flash";
-            } else if (provider === "6") { // Custom
+            } else if (provider === "6") {
                 baseUrl = prompt("Enter the custom API Base URL (e.g., https://api.example.com/v1):");
                 model = prompt("Enter the model name:");
             } else {
@@ -185,12 +185,9 @@
                 return;
             }
 
-            // Step 3: Ask for the API Key (Secure, never stored)
             apiKey = prompt("Enter your " + (provider === "5" ? "Gemini" : "API") + " Key:");
 
-            // Step 4: Send the request
             if (isGemini) {
-                // Gemini uses a different URL and format
                 fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -206,7 +203,6 @@
                     aiOutputDiv.innerHTML = "Error: " + error;
                 });
             } else {
-                // All other providers use the OpenAI-compatible format
                 fetch(`${baseUrl}/chat/completions`, {
                     method: "POST",
                     headers: {
