@@ -42,6 +42,7 @@
                 <button onclick="runCode(54)">Run C++</button>
                 <button onclick="runCode(62)">Run Java</button>
                 <button onclick="saveCode()">Save Current File</button>
+                <button onclick="downloadFile()">Download File</button>
                 <button onclick="askAI()">AI Help</button>
                 <button onclick="shareCode()">Share Code</button>
             </div>
@@ -101,6 +102,21 @@
                 }
                 currentFile = fileName;
             });
+        }
+
+        // ✅ NEW: Download the code as a file!
+        function downloadFile() {
+            const code = document.getElementById('code').value;
+            const blob = new Blob([code], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = currentFile || "code.txt";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            document.getElementById('output').innerHTML = "File Downloaded!";
         }
 
         function runCode(languageId) {
