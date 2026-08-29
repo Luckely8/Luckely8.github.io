@@ -4,14 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CodeRunner Web - Professional IDE</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <!-- CodeMirror CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
     <style>
         body { font-family: monospace; background-color: #121212; color: white; padding: 20px; }
         .container { display: flex; gap: 20px; }
         .sidebar { width: 250px; background: #1E1E1E; padding: 15px; border-radius: 5px; }
         .main-area { flex: 1; }
         .btn-row { display: flex; gap: 8px; margin-top: 10px; }
-        .code-area { width: 100%; height: 300px; background: #1E1E1E; color: white; border: none; padding: 10px; font-size: 16px; border-radius: 5px; resize: vertical; }
+        .CodeMirror { height: 300px; border-radius: 5px; }
         button { padding: 10px 20px; background: green; color: white; border: none; cursor: pointer; border-radius: 5px; font-family: monospace; }
         button:hover { background: darkgreen; }
         #output { background: #1E1E1E; padding: 10px; margin-top: 10px; min-height: 100px; color: lime; border-radius: 5px; }
@@ -35,7 +37,8 @@
         </div>
         
         <div class="main-area">
-            <textarea id="code" class="code-area" spellcheck="false">print("Hello World")</textarea>
+            <!-- This hidden textarea will be replaced by CodeMirror -->
+            <textarea id="code"></textarea>
             
             <div class="btn-row">
                 <button onclick="runCode(71)">Run Python</button>
@@ -52,11 +55,28 @@
         </div>
     </div>
 
-    <!-- Syntax Highlighting Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <!-- CodeMirror Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <!-- Python Mode -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+    <!-- JavaScript Mode -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+    <!-- C++ Mode -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/clike/clike.min.js"></script>
+    <!-- Java Mode -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/clike/clike.min.js"></script>
 
     <script>
         let currentFile = "main.py";
+
+        // Initialize CodeMirror with Syntax Highlighting
+        const editor = CodeMirror.fromTextArea(document.getElementById('code'), {
+            lineNumbers: true,
+            mode: 'python', // Default to Python
+            theme: 'dracula',
+            indentUnit: 4,
+            tabSize: 4
+        });
 
         function createFile() {
             const fileName = document.getElementById('fileName').value;
@@ -71,19 +91,19 @@
         }
 
         function saveCode() {
-            const code = document.getElementById('code').value;
+            const code = editor.getValue();
             localStorage.setItem('currentCode', code);
             document.getElementById('output').innerHTML = "Code Saved!";
         }
 
         function loadFile(fileName) {
-            document.getElementById('code').value = localStorage.getItem('currentCode') || "";
+            editor.setValue(localStorage.getItem('currentCode') || "");
             document.getElementById('output').innerHTML = "Loaded " + fileName;
             currentFile = fileName;
         }
 
         function shareCode() {
-            const code = document.getElementById('code').value;
+            const code = editor.getValue();
             const encodedCode = btoa(code);
             const shareUrl = window.location.origin + window.location.pathname + "#code=" + encodedCode;
             const copyText = "Check out this code: " + shareUrl;
@@ -95,8 +115,13 @@
             });
         }
 
-        function runCode(languageId) {
-            const code = document.getElementById('code').value;
+        function changeLanguage(language) {
+            editor.setOption('mode', language);
+        }
+
+        function runCode(languageId, languageName) {
+            const code = editor.getValue();
+            changeLanguage(languageName);
             const outputDiv = document.getElementById('output');
             outputDiv.innerHTML = "Running...";
 
@@ -119,7 +144,7 @@
         }
 
         function askAI() {
-            const code = document.getElementById('code').value;
+            const code = editor.getValue();
             const aiOutputDiv = document.getElementById('aiOutput');
             aiOutputDiv.innerHTML = "AI is thinking...";
 
