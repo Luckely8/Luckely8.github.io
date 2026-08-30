@@ -50,7 +50,7 @@
             })
             .then(response => response.json())
             .then(data => {
-                const text = data.candidates[0].content.parts[0].text;
+               const text = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] ? data.candidates[0].content.parts[0].text : "No response text found.";
                 const cleanCode = text.replace(/```html/g, "").replace(/```/g, "").trim();
                 outputDiv.innerHTML = cleanCode;
             })
