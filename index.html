@@ -40,22 +40,24 @@
 
             outputDiv.innerHTML = "Generating your app...";
 
-            // Send to Gemini
-           fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            // ✅ FIXED: Send the key in the HEADER, not the URL!
+            fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json",
+                    "x-goog-api-key": apiKey // <--- THIS IS THE KEY!
+                },
                 body: JSON.stringify({
                     contents: [{ parts: [{ text: `Write a complete single-file HTML, CSS, and JavaScript app for this request: ${promptText}. Return ONLY the code.` }] }]
                 })
             })
             .then(response => response.json())
             .then(data => {
-                // SAFE TEXT EXTRACTION FIX
                 let text = "No response text found.";
                 if (data.candidates && data.candidates[0]) {
                   if (data.candidates[0].content && data.candidates[0].content.parts) {
                     text = data.candidates[0].content.parts.map(p => p.text).join('');
-                  } else if (data.candidates[0].output) { // New format for some models
+                  } else if (data.candidates[0].output) {
                     text = data.candidates[0].output;
                   }
                 }
