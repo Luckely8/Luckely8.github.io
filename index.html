@@ -50,7 +50,16 @@
             })
             .then(response => response.json())
             .then(data => {
-               const text = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] ? data.candidates[0].content.parts[0].text : "No response text found.";
+                // SAFE TEXT EXTRACTION FIX
+                let text = "No response text found.";
+                if (data.candidates && data.candidates[0]) {
+                  if (data.candidates[0].content && data.candidates[0].content.parts) {
+                    text = data.candidates[0].content.parts.map(p => p.text).join('');
+                  } else if (data.candidates[0].output) { // New format for some models
+                    text = data.candidates[0].output;
+                  }
+                }
+
                 const cleanCode = text.replace(/```html/g, "").replace(/```/g, "").trim();
                 outputDiv.innerHTML = cleanCode;
             })
