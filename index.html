@@ -40,26 +40,20 @@
 
             outputDiv.innerHTML = "Generating your app...";
 
-            // ✅ FIXED: Send the key in the HEADER, not the URL!
-            fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`, {
+            // ✅ Use gemini-3.5-flash (The one that worked before!)
+           fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
                 method: "POST",
-                headers: { 
-                    "Content-Type": "application/json",
-                    "x-goog-api-key": apiKey // <--- THIS IS THE KEY!
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     contents: [{ parts: [{ text: `Write a complete single-file HTML, CSS, and JavaScript app for this request: ${promptText}. Return ONLY the code.` }] }]
                 })
             })
             .then(response => response.json())
             .then(data => {
+                // ✅ SAFE TEXT EXTRACTION
                 let text = "No response text found.";
-                if (data.candidates && data.candidates[0]) {
-                  if (data.candidates[0].content && data.candidates[0].content.parts) {
-                    text = data.candidates[0].content.parts.map(p => p.text).join('');
-                  } else if (data.candidates[0].output) {
-                    text = data.candidates[0].output;
-                  }
+                if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
+                    text = data.candidates[0].content.parts[0].text;
                 }
 
                 const cleanCode = text.replace(/```html/g, "").replace(/```/g, "").trim();
