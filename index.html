@@ -81,7 +81,7 @@
 
             const repo = "MyARGame";
             const username = "LuckEly8";
-            const filePath = "app/src/main/java/com/yourcompany/sphereapp3/MainActivity.kt";
+            const filePath = "README.md"; // <-- THIS IS THE FIX! We send to README.md so it doesn't break the build!
 
             // 1. First, GET the sha of the existing file
             fetch(`https://api.github.com/repos/${username}/${repo}/contents/${filePath}`, {
