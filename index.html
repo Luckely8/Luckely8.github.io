@@ -3,17 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake Game - CodeRunner</title>
+    <title>Snake Game - Mouse Control</title>
     <style>
         body { font-family: monospace; background-color: #121212; color: white; display: flex; flex-direction: column; align-items: center; margin-top: 50px; }
-        canvas { border: 2px solid #00FF00; background-color: #000; }
+        canvas { border: 2px solid #00FF00; background-color: #000; cursor: pointer; }
         h2 { color: #00FF00; }
+        #controls { margin-top: 20px; }
+        button { padding: 10px; margin: 5px; background: #00FF00; color: #000; border: none; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
-    <h2>Snake Game</h2>
+    <h2>Snake Game (Mouse Only)</h2>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
-    <p>Use Arrow Keys to move!</p>
+    <div id="controls">
+        <button onclick="changeDirection('UP')">⬆️ Up</button>
+        <button onclick="changeDirection('DOWN')">⬇️ Down</button>
+        <button onclick="changeDirection('LEFT')">⬅️ Left</button>
+        <button onclick="changeDirection('RIGHT')">➡️ Right</button>
+    </div>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -24,12 +31,13 @@
         let score = 0;
         let game;
 
-        document.addEventListener('keydown', (event) => {
-            if(event.key === 'ArrowUp' && direction !== 'DOWN') direction = 'UP';
-            if(event.key === 'ArrowDown' && direction !== 'UP') direction = 'DOWN';
-            if(event.key === 'ArrowLeft' && direction !== 'RIGHT') direction = 'LEFT';
-            if(event.key === 'ArrowRight' && direction !== 'LEFT') direction = 'RIGHT';
-        });
+        function changeDirection(newDirection) {
+            if (direction === 'UP' && newDirection === 'DOWN') return;
+            if (direction === 'DOWN' && newDirection === 'UP') return;
+            if (direction === 'LEFT' && newDirection === 'RIGHT') return;
+            if (direction === 'RIGHT' && newDirection === 'LEFT') return;
+            direction = newDirection;
+        }
 
         function draw() {
             ctx.fillStyle = 'black';
