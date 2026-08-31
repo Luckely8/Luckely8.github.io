@@ -1,3 +1,4 @@
+        // ✅ Automatically send code to GitHub
         function sendToGitHub(code) {
             const token = document.getElementById('ghToken').value;
             if (!token) {
@@ -9,7 +10,7 @@
             const username = "LuckEly8";
             const filePath = "app/src/main/java/com/yourcompany/sphereapp3/MainActivity.kt";
 
-            // 1. First, check if the file exists and get its "sha"
+            // 1. First, GET the sha of the existing file
             fetch(`https://api.github.com/repos/${username}/${repo}/contents/${filePath}`, {
                 method: "GET",
                 headers: {
@@ -19,9 +20,9 @@
             })
             .then(response => response.json())
             .then(fileData => {
-                const sha = fileData.sha; // This is the sha of the existing file
+                const sha = fileData.sha; // Find the sha
 
-                // 2. Now, update the file with the sha
+                // 2. Now, UPDATE the file with the sha
                 return fetch(`https://api.github.com/repos/${username}/${repo}/contents/${filePath}`, {
                     method: "PUT",
                     headers: {
